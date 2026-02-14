@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>For You 💗</title>
+  <style>
+    :root{
+      --ink:#1f2937;
+      --muted:#6b7280;
+
+      --pink:#ff4fa0;
+      --pink2:#ff8fc7;
+      --peach:#ffd0b3;
+
+      --card: rgba(255,255,255,.72);
+      --border: rgba(255,255,255,.85);
+      --shadow: 0 18px 60px rgba(0,0,0,.12);
+
+      --radius: 26px;
+      --t: 520ms;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      height:100vh;
+      overflow:hidden;
+      font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    /* ===== Background tint (changes with photo) ===== */
+    .tint{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      overflow:hidden;
+    }
+    .tintLayer{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      transition: opacity var(--t) ease;
+    }
+    .tintLayer.show{ opacity:1; }
+    .tintLayer::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(900px 420px at 15% 10%, rgba(255,79,160,.12), transparent 60%),
+        radial-gradient(900px 420px at 85% 20%, rgba(255,208,179,.14), transparent 60%),
+        radial-gradient(700px 500px at 50% 85%, rgba(255,143,199,.10), transparent 60%);
+      pointer-events:none;
+      mix-blend-mode: screen;
+      opacity: .9;
+    }
+
+    /* Layout */
+    .wrap{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 12px;
+      z-index:1;
+      transition: opacity var(--t) ease, transform var(--t) ease;
+    }
+    .wrap.hidden{
+      opacity:0;
+      transform: scale(.99);
+      pointer-events:none;
+    }
+
+    .stage{
+      width:min(1120px, 96vw);
+      height:min(640px, 90vh);
+      display:grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 12px;
+      align-items:stretch;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+      position:relative;
+    }
+
+    /* Top meta */
+    .topline{
+      position:absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      pointer-events:none;
+      z-index: 5;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(255,255,255,.9);
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      font-weight: 900;
+      color: var(--ink);
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius: 99px;
+      background: linear-gradient(135deg, var(--pink), var(--pink2));
+      box-shadow: 0 12px 24px rgba(255,79,160,.25);
+    }
+    .pill{
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(255,255,255,.9);
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      font-weight: 900;
+      color: var(--muted);
+      font-size: 12.5px;
+      white-space:nowrap;
+    }
+
+    /* LEFT: message */
+    .left{
+      padding: 52px 14px 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .bubble{
+      flex: 1;
+      border-radius: calc(var(--radius) - 6px);
+      background: rgba(255,255,255,.70);
+      border: 1px solid rgba(255,255,255,.88);
+      box-shadow: 0 14px 40px rgba(0,0,0,.08);
+      position:relative;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      min-height: 220px;
+    }
+    .bubble::before{
+      content:"";
+      position:absolute;
+      inset:-80px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,79,160,.18), transparent 45%),
+        radial-gradient(circle at 85% 35%, rgba(255,208,179,.22), transparent 46%),
+        radial-gradient(circle at 55% 85%, rgba(255,143,199,.14), transparent 55%);
+      filter: blur(1px);
+      opacity:.95;
+    }
+    .bubbleInner{
+      position:relative;
+      z-index:1;
+      padding: 18px 18px;
+      width:100%;
+    }
+
+    .tag{
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing:.24px;
+      color: rgba(255,79,160,.95);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .tag .tagSticker{
+      font-size: 15px;
+      filter: drop-shadow(0 10px 14px rgba(255,79,160,.18));
+      animation: bob 2.2s ease-in-out infinite;
+    }
+
+    .textWrap{
+      position:relative;
+      min-height: 160px;
+    }
+
+    .line{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      transform: translateY(10px);
+      transition: opacity var(--t) ease, transform var(--t) ease;
+      font-size: clamp(20px, 2.4vw, 34px);
+      font-weight: 950;
+      line-height: 1.28;
+      color: var(--ink);
+      word-break: break-word;
+    }
+    .line.show{
+      opacity:1;
+      transform: translateY(0);
+    }
+
+    /* Typing caret */
+    .line.typing::after{
+      content:"";
+      display:inline-block;
+      width: 10px;
+      height: 1.15em;
+      margin-left: 6px;
+      border-radius: 4px;
+      background: rgba(255,79,160,.9);
+      vertical-align: -0.12em;
+      animation: caretBlink .9s steps(1) infinite;
+      box-shadow: 0 10px 20px rgba(255,79,160,.18);
+    }
+    @keyframes caretBlink{
+      0%,49%{ opacity:1; }
+      50%,100%{ opacity:0; }
+    }
+
+    .sub{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13.5px;
+      font-weight: 800;
+      min-height: 18px;
+    }
+
+    .bubble.glow{ animation: glow 720ms ease; }
+    @keyframes glow{
+      0%{ transform: translateY(0) scale(1); box-shadow: 0 14px 40px rgba(0,0,0,.08); }
+      45%{ transform: translateY(-2px) scale(1.01); box-shadow: 0 18px 55px rgba(255,79,160,.14); }
+      100%{ transform: translateY(0) scale(1); box-shadow: 0 14px 40px rgba(0,0,0,.08); }
+    }
+
+    /* RIGHT: photo */
+    .right{
+      padding: 52px 14px 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .photoFrame{
+      flex:1;
+      min-height: 260px;          /* ✅ ensure height exists (mobile bug fix) */
+      border-radius: calc(var(--radius) - 6px);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.88);
+      box-shadow: 0 16px 55px rgba(0,0,0,.12);
+      background:#fff;
+      position:relative;
+    }
+
+    /* crossfade image layers */
+    .layer{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      transition: opacity var(--t) ease, transform var(--t) ease;
+      border-radius: inherit;
+      overflow:hidden;
+    }
+    .layer.show{
+      opacity:1;
+      transform: scale(1.01);
+    }
+
+    .layer .blur{
+      position:absolute;
+      inset:-24px;
+      width: calc(100% + 48px);
+      height: calc(100% + 48px);
+      object-fit: cover;
+      transform: scale(1.08);
+      filter: blur(20px) saturate(1.05) brightness(.88);
+      opacity: .92;
+    }
+    .layer .main{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      padding: 2.4vh 2.0vw;
+      filter: drop-shadow(0 18px 55px rgba(0,0,0,.18));
+    }
+
+    .photoFrame::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(900px 420px at 50% 10%, rgba(255,255,255,.35), transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.18));
+      pointer-events:none;
+    }
+
+    /* Hide caption */
+    .caption{ display:none !important; }
+
+    .photoFrame.pop{ animation: pop 720ms ease; }
+    @keyframes pop{
+      0%{ transform: translateY(0) scale(1); }
+      45%{ transform: translateY(-2px) scale(1.01); }
+      100%{ transform: translateY(0) scale(1); }
+    }
+
+    /* Stickers */
+    .sticker{
+      position:absolute;
+      z-index:6;
+      pointer-events:none;
+      filter: drop-shadow(0 12px 18px rgba(0,0,0,.08));
+      opacity:.95;
+      animation: bob 2.8s ease-in-out infinite;
+    }
+    .sticker.s1{ top: 12px; right: 14px; font-size: 18px; }
+    .sticker.s2{ bottom: 16px; right: 16px; font-size: 18px; animation-duration: 3.2s; opacity:.85; }
+    .sticker.s3{ top: 14px; left: 16px; font-size: 18px; animation-duration: 3.0s; opacity:.85; }
+
+    @keyframes bob{
+      0%,100%{ transform: translateY(0) rotate(0deg); }
+      50%{ transform: translateY(-3px) rotate(-1deg); }
+    }
+
+    /* Controls */
+    .controls{
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.70);
+      border: 1px solid rgba(255,255,255,.9);
+      box-shadow: 0 16px 55px rgba(0,0,0,.12);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      transition: opacity var(--t) ease, transform var(--t) ease;
+    }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(31,41,55,.06);
+      color: var(--ink);
+      font-weight: 950;
+      letter-spacing:.2px;
+      transition: transform .12s ease, background .12s ease;
+      user-select:none;
+      white-space: nowrap;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(31,41,55,.085); }
+    .btn:active{ transform: translateY(0); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(255,79,160,.95), rgba(255,143,199,.95));
+      color:#fff;
+      box-shadow: 0 14px 34px rgba(255,79,160,.22);
+    }
+    .stat{
+      font-size: 12.5px;
+      color: var(--muted);
+      font-weight: 900;
+      padding: 0 6px;
+      min-width: 98px;
+      text-align:center;
+    }
+
+    audio{ display:none; }
+
+    /* =========================
+       FINALE: cinematic gallery
+       ========================= */
+    .finale{
+      position: fixed;
+      inset: 0;
+      z-index: 8;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+    }
+    .finale.show{ display:flex; }
+
+    .finaleInner{
+      position:relative;
+      width:min(1120px, 96vw);
+      height:min(680px, 92vh);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(255,255,255,.85);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+      transform: scale(.99);
+      opacity:0;
+      transition: opacity var(--t) ease, transform var(--t) ease;
+    }
+    .finale.show .finaleInner{
+      opacity:1;
+      transform: scale(1);
+    }
+
+    .finaleTop{
+      position:absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      z-index: 3;
+      pointer-events:none;
+    }
+    .finaleTitle, .finaleHint{
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(255,255,255,.92);
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      font-weight: 900;
+      white-space:nowrap;
+    }
+    .finaleTitle{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color: var(--ink);
+      font-weight: 950;
+    }
+    .finaleHint{ color: var(--muted); font-size: 12.5px; }
+
+    .floatField{
+      position:absolute;
+      inset:0;
+      z-index: 1;
+      overflow:hidden;
+    }
+
+    .floatField::before{
+      content:"";
+      position:absolute;
+      inset:-110px;
+      background:
+        radial-gradient(900px 520px at 20% 10%, rgba(255,79,160,.10), transparent 60%),
+        radial-gradient(900px 520px at 85% 20%, rgba(255,208,179,.12), transparent 62%),
+        radial-gradient(700px 560px at 50% 85%, rgba(255,143,199,.08), transparent 60%);
+      opacity:.95;
+      pointer-events:none;
+    }
+
+    .grain{
+      position:absolute;
+      inset:-40%;
+      z-index: 4;
+      pointer-events:none;
+      opacity: .10;
+      mix-blend-mode: overlay;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      animation: grainMove 7s steps(2) infinite;
+      transform: rotate(3deg);
+    }
+    @keyframes grainMove{
+      0%{ transform: translate3d(-2%, -2%, 0) rotate(3deg); }
+      50%{ transform: translate3d(2%, 1%, 0) rotate(3deg); }
+      100%{ transform: translate3d(-1%, 2%, 0) rotate(3deg); }
+    }
+
+    .vignette{
+      position:absolute;
+      inset:0;
+      z-index: 3;
+      pointer-events:none;
+      background:
+        radial-gradient(1200px 600px at 50% 30%, rgba(0,0,0,.00), rgba(0,0,0,.12));
+      opacity: .65;
+      animation: vignetteBreath 9s ease-in-out infinite;
+    }
+    @keyframes vignetteBreath{
+      0%,100%{ opacity:.58; }
+      50%{ opacity:.72; }
+    }
+
+    .floatCard{
+      position:absolute;
+      border-radius: 18px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.85);
+      box-shadow: 0 16px 50px rgba(0,0,0,.12);
+      background: rgba(255,255,255,.65);
+      transform: translate3d(0,0,0);
+      will-change: transform, opacity, filter;
+      opacity: 0;
+      filter: blur(5px) saturate(1.02);
+    }
+    .floatCard img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+      filter: saturate(1.05) contrast(1.02);
+      transform: scale(1.02);
+    }
+    .floatCard::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: radial-gradient(600px 280px at 50% 0%, rgba(255,255,255,.28), transparent 60%);
+      pointer-events:none;
+    }
+
+    .floatCard.drift{
+      filter: blur(0px) saturate(1.03);
+      animation:
+        drift var(--dur, 11s) ease-in-out var(--delay, 0ms) infinite,
+        shimmer 5.8s ease-in-out calc(var(--delay, 0ms) + 800ms) infinite;
+    }
+    @keyframes drift{
+      0%,100%{ transform: translate3d(0,0,0) rotate(var(--r0, -1deg)); }
+      50%{ transform: translate3d(var(--dx, 10px), var(--dy, -10px), 0) rotate(var(--r1, 1deg)); }
+    }
+    @keyframes shimmer{
+      0%,100%{ filter: blur(0px) saturate(1.03); }
+      50%{ filter: blur(0px) saturate(1.06) brightness(1.02); }
+    }
+
+    .finaleInner::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(900px 420px at 50% 10%, rgba(255,255,255,.30), transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,.00), rgba(0,0,0,.10));
+      pointer-events:none;
+      z-index:2;
+    }
+
+    .finaleCta{
+      position:absolute;
+      left: 14px;
+      bottom: 14px;
+      right: 14px;
+      z-index: 5;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(255,255,255,.92);
+      box-shadow: 0 14px 38px rgba(0,0,0,.10);
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 12.8px;
+    }
+    .finaleCta strong{ color: var(--ink); }
+    .finaleCta .tiny{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+
+    /* =========================
+       ✅ RESPONSIVE: mobile fix
+       ========================= */
+    @media (max-width: 900px){
+      body{
+        height:auto;
+        min-height: 100dvh; /* ✅ stable on mobile browsers */
+        overflow:auto;
+      }
+
+      .wrap{
+        position:relative;
+        min-height: 100dvh; /* ✅ keep layout inside viewport */
+        padding: 12px;
+      }
+
+      .stage{
+        height:auto;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto; /* ✅ two blocks */
+        gap: 12px;
+      }
+
+      .left, .right{ padding: 52px 12px 12px; }
+
+      .bubble{ min-height: 210px; }
+      .textWrap{ min-height: 130px; }
+
+      .photoFrame{
+        min-height: 44vh;            /* ✅ give it real height */
+        height: auto;
+      }
+      /* fallback if some devices calculate vh weirdly */
+      @supports (aspect-ratio: 1 / 1){
+        .photoFrame{ aspect-ratio: 16 / 10; }
+      }
+    }
+
+    @media (max-width: 480px){
+      .controls{
+        left: 50%;
+        bottom: 10px;
+        transform: translateX(-50%);
+        gap: 8px;
+        padding: 9px 10px;
+        border-radius: 18px;
+        flex-wrap: wrap;
+        justify-content:center;
+        width: calc(100% - 16px);
+        max-width: 520px;
+      }
+      .btn{ padding: 10px 12px; flex: 1 1 auto; }
+      .stat{ display:none; }
+      .badge, .pill{ font-size: 12px; }
+      .finaleInner{
+        width: calc(100% - 16px);
+        height: min(720px, 92vh);
+      }
+      .finaleTop{ top: 10px; left: 10px; right: 10px; }
+      .finaleCta{
+        left: 10px; right: 10px; bottom: 10px;
+        font-size: 12px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; }
+      .floatCard{ opacity:1 !important; filter:none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="tint" aria-hidden="true">
+    <div class="tintLayer show" id="tintA"></div>
+    <div class="tintLayer" id="tintB"></div>
+  </div>
+
+  <div class="wrap" id="wrap">
+    <div class="stage">
+
+      <!-- LEFT -->
+      <section class="card left">
+        <div class="topline">
+          <div class="badge"><span class="dot"></span><span id="girlName">Vin <3 Thy</span></div>
+          <div class="pill" id="daysTogether">…</div>
+        </div>
+
+        <div class="sticker s1" aria-hidden="true">🌸</div>
+        <div class="sticker s2" aria-hidden="true">✨</div>
+
+        <div class="bubble" id="bubble">
+          <div class="bubbleInner">
+            <div class="tag" id="msgTitle"><span class="tagSticker" aria-hidden="true">🧸</span><span>Gợi ý</span></div>
+
+            <div class="textWrap">
+              <div class="line show" id="lineA">Nhấn <b>Play</b> để bắt đầu 💗</div>
+              <div class="line" id="lineB"></div>
+            </div>
+
+            <div class="sub" id="msgSub"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <aside class="card right">
+        <div class="topline">
+          <div class="badge"><span class="dot"></span><span>Our Photos</span></div>
+          <div class="pill" style="visibility:hidden">.</div>
+        </div>
+
+        <div class="sticker s3" aria-hidden="true">🎀</div>
+
+        <div class="photoFrame" id="photoFrame">
+          <div class="layer show" id="layerA">
+            <img class="blur" id="blurA" src="photos/01.jpg" alt="" aria-hidden="true">
+            <img class="main" id="mainA" src="photos/01.jpg" alt="our photo">
+          </div>
+          <div class="layer" id="layerB">
+            <img class="blur" id="blurB" src="photos/01.jpg" alt="" aria-hidden="true">
+            <img class="main" id="mainB" src="photos/01.jpg" alt="our photo">
+          </div>
+          <div class="caption" id="caption"><span></span></div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- Finale -->
+  <section class="finale" id="finale" aria-hidden="true">
+    <div class="finaleInner">
+      <div class="finaleTop">
+        <div class="finaleTitle"><span class="dot"></span><span id="finaleTitleText">Một trời kỷ niệm 💗</span></div>
+        <div class="finaleHint">Nhấn Restart để xem lại ⟲</div>
+      </div>
+
+      <div class="floatField" id="floatField" aria-hidden="true"></div>
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+
+      <div class="finaleCta">
+        <span>Hết rồi… nhưng <strong>thương em thì chưa</strong> 💞</span>
+        <span class="tiny">✨ 🎀 🧸</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <div class="controls" id="controls">
+    <button class="btn primary" id="playBtn">Play ▶</button>
+    <button class="btn" id="nextBtn">Next ⏭</button>
+    <button class="btn" id="restartBtn">Restart ⟲</button>
+    <button class="btn" id="musicBtn">Music ♫</button>
+    <div class="stat" id="stat">0 / 40</div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="bgm" preload="auto" loop>
+    <source src="music/love.mp3" type="audio/mpeg" />
+  </audio>
+
+<script>
+  // ========= CONFIG =========
+  const GIRL_NAME = "VIN 💗 THY";
+  const startDate = new Date("2020-07-25"); // YYYY-MM-DD
+
+  // ✅ 20 messages + 20 photos => 40 scenes
+  const sequence = [
+    { type:"text", title:"Gửi em", text:"Valentine này anh có một điều nhỏ muốn nói…" },
+    { type:"image", src:"photos/01.jpg" },
+
+    { type:"text", title:"Điều đầu tiên", text:"Cảm ơn em vì đã đến — và làm thế giới của anh dịu lại." },
+    { type:"image", src:"photos/02.jpg" },
+
+    { type:"text", title:"Anh thích", text:"Anh thích những khoảnh khắc bình thường… nhưng có em ở đó." },
+    { type:"image", src:"photos/03.jpg" },
+
+    { type:"text", title:"Thực lòng", text:"Ở cạnh em, anh thấy mình muốn trở thành phiên bản tốt hơn." },
+    { type:"image", src:"photos/04.jpg" },
+
+    { type:"text", title:"Em hãy luôn mỉm cười nhé, vì...", text:"Em là điều tuyệt vời nhất với nhanh, hãy luôn mỉm cười nhen." },
+    { type:"image", src:"photos/05.jpg" },
+
+    { type:"text", title:"Cảm ơn Thy", text:"Cảm ơn Thy vì đã kiên nhẫn… kể cả khi anh bận và hơi vụng về trong cách thể hiện tình cảm." },
+    { type:"image", src:"photos/06.jpg" },
+
+    { type:"text", title:"Tụi mình", text:"Mình không cần hoàn hảo — chỉ cần cùng nhau cố gắng. Hãy cùng nhau vượt qua mọi khó khăn nhé!" },
+    { type:"image", src:"photos/07.jpg" },
+
+    { type:"text", title:"Những điều nhỏ", text:"Anh luôn trân trọng cả những điều nhỏ xíu em làm mỗi ngày. Anh biết mình đã chọn đúng người để yêu thương." },
+    { type:"image", src:"photos/08.jpg" },
+
+    { type:"text", title:"Bình yên", text:"Anh mong em luôn bình yên, hạnh phúc. Anh sẽ luôn ở bên che chở cho em." },
+    { type:"image", src:"photos/09.jpg" },
+
+    { type:"text", title:"Anh hứa", text:"Anh sẽ luôn tôn trọng em — và trân trọng tình yêu của tụi mình." },
+    { type:"image", src:"photos/10.jpg" },
+
+    { type:"text", title:"Đi tiếp nhé", text:"Mình cùng nhau đi thêm nhiều nơi, chụp thêm nhiều ảnh nữa nha." },
+    { type:"image", src:"photos/11.jpg" },
+
+    { type:"text", title:"Ở cạnh em", text:"Ở cạnh em, anh có cảm giác là một gia đình." },
+    { type:"image", src:"photos/12.jpg" },
+
+    { type:"text", title:"Valentine", text:"Valentine này anh chỉ mong: em cười nhiều hơn một chút." },
+    { type:"image", src:"photos/13.jpg" },
+
+    { type:"text", title:"Thương", text:"Anh muốn thương em bằng tất cả những gì anh có — và sẽ luôn yêu em như vậy." },
+    { type:"image", src:"photos/14.jpg" },
+
+    { type:"text", title:"Tự hào", text:"Anh tự hào vì chúng ta đã cùng nhau vượt qua thật nhiều khó khăn." },
+    { type:"image", src:"photos/15.jpg" },
+
+    { type:"text", title:"Nhớ", text:"Nhớ em là kiểu: thấy điều gì dễ thương cũng muốn kể em nghe." },
+    { type:"image", src:"photos/16.jpg" },
+
+    { type:"text", title:"Cảm giác", text:"Ở bên em, tim anh cảm thấy nhẹ nhàng và hạnh phúc hơn bao giờ hết." },
+    { type:"image", src:"photos/17.jpg" },
+
+    { type:"text", title:"Anh sẽ luôn chọn em", text:"Nếu được chọn lại nhiều lần, anh vẫn chọn em." },
+    { type:"image", src:"photos/18.jpg" },
+
+    { type:"text", title:"Anh mong và anh tin là", text:"Mình sẽ còn rất nhiều Valentine nữa — bên cạnh nhau." },
+    { type:"image", src:"photos/19.jpg" },
+
+    { type:"text", title:"Forever", text:"Happy Valentine Honey!!! 💗" },
+    { type:"image", src:"photos/20.jpg" }
+  ];
+
+  // Timing
+  const HOLD_TEXT = 2400;
+  const HOLD_IMAGE = 1900;
+  const GAP = 180;
+
+  // Typing effect
+  const TYPE_SPEED = 18;
+  const TYPE_MIN = 520;
+  const TYPE_MAX = 1500;
+
+  // Finale
+  const FINALE_COUNT = 22;
+  const FINALE_SAFE = 14;
+
+  // ========= ELEMENTS =========
+  const girlEl = document.getElementById("girlName");
+  const daysEl = document.getElementById("daysTogether");
+  const statEl = document.getElementById("stat");
+
+  const bubble = document.getElementById("bubble");
+  const msgTitle = document.getElementById("msgTitle");
+  const msgSub = document.getElementById("msgSub");
+
+  const lineA = document.getElementById("lineA");
+  const lineB = document.getElementById("lineB");
+  let textFront = true;
+
+  const photoFrame = document.getElementById("photoFrame");
+  const layerA = document.getElementById("layerA");
+  const layerB = document.getElementById("layerB");
+  const blurA = document.getElementById("blurA");
+  const mainA = document.getElementById("mainA");
+  const blurB = document.getElementById("blurB");
+  const mainB = document.getElementById("mainB");
+  let photoFront = true;
+
+  const tintA = document.getElementById("tintA");
+  const tintB = document.getElementById("tintB");
+  let tintFront = true;
+
+  const playBtn = document.getElementById("playBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const restartBtn = document.getElementById("restartBtn");
+
+  const bgm = document.getElementById("bgm");
+  const musicBtn = document.getElementById("musicBtn");
+  let musicOn = false;
+
+  const wrap = document.getElementById("wrap");
+  const finale = document.getElementById("finale");
+  const floatField = document.getElementById("floatField");
+
+  // ========= INIT META =========
+  girlEl.textContent = GIRL_NAME;
+  const today = new Date();
+  const diff = Math.abs(today - startDate);
+  const days = Math.ceil(diff / (1000*60*60*24));
+  daysEl.textContent = `Bên nhau ${days} ngày 💞`;
+  statEl.textContent = `0 / ${sequence.length}`;
+
+  // ========= ENGINE =========
+  let i = 0;
+  let timer = null;
+  let playing = false;
+
+  let typingTimer = null;
+  let typingAbort = 0;
+  let typingActiveEl = null;
+  let typingFullText = "";
+
+  function clearTimer(){ if (timer){ clearTimeout(timer); timer = null; } }
+  function setStat(){ statEl.textContent = `${Math.min(i, sequence.length)} / ${sequence.length}`; }
+
+  function glowText(){
+    bubble.classList.remove("glow");
+    void bubble.offsetWidth;
+    bubble.classList.add("glow");
+  }
+  function popPhoto(){
+    photoFrame.classList.remove("pop");
+    void photoFrame.offsetWidth;
+    photoFrame.classList.add("pop");
+  }
+
+  function abortTyping(){
+    typingAbort++;
+    if (typingTimer){ clearTimeout(typingTimer); typingTimer = null; }
+    if (typingActiveEl){
+      typingActiveEl.classList.remove("typing");
+      typingActiveEl = null;
+      typingFullText = "";
+    }
+  }
+
+  function skipTypingToEnd(){
+    if (!typingActiveEl) return false;
+    typingActiveEl.innerHTML = escapeHtml(typingFullText).replace(/\n/g, "<br>");
+    typingActiveEl.classList.remove("typing");
+    if (typingTimer){ clearTimeout(typingTimer); typingTimer = null; }
+    typingActiveEl = null;
+    typingFullText = "";
+    return true;
+  }
+
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function typeInto(el, text){
+    abortTyping();
+    const token = typingAbort;
+
+    const raw = String(text ?? "");
+    typingActiveEl = el;
+    typingFullText = raw;
+
+    el.classList.add("typing");
+    const total = raw.length;
+
+    const est = Math.min(TYPE_MAX, Math.max(TYPE_MIN, total * TYPE_SPEED));
+    const step = Math.max(1, Math.ceil(total / (est / TYPE_SPEED)));
+
+    let idx = 0;
+    el.innerHTML = "";
+
+    function finish(){
+      el.innerHTML = escapeHtml(raw).replace(/\n/g, "<br>");
+      el.classList.remove("typing");
+      typingActiveEl = null;
+      typingFullText = "";
+    }
+
+    function tick(){
+      if (token !== typingAbort) return;
+
+      idx = Math.min(total, idx + step);
+      const partial = raw.slice(0, idx);
+      el.innerHTML = escapeHtml(partial).replace(/\n/g, "<br>");
+
+      if (idx < total){
+        typingTimer = setTimeout(tick, TYPE_SPEED);
+      } else {
+        finish();
+      }
+    }
+    tick();
+  }
+
+  function setText(title, text){
+    msgTitle.innerHTML = `<span class="tagSticker" aria-hidden="true">🧸</span><span>${escapeHtml(title || "Message")}</span>`;
+    msgSub.textContent = "From bottom of my heart 💗";
+    glowText();
+
+    const front = textFront ? lineA : lineB;
+    const back  = textFront ? lineB : lineA;
+
+    back.classList.add("show");
+    front.classList.remove("show");
+    textFront = !textFront;
+
+    typeInto(back, text);
+  }
+
+  function setPhoto(src){
+    popPhoto();
+
+    const frontLayer = photoFront ? layerA : layerB;
+    const backLayer  = photoFront ? layerB : layerA;
+    const backBlur = photoFront ? blurB : blurA;
+    const backMain = photoFront ? mainB : mainA;
+
+    backBlur.src = src;
+    backMain.src = src;
+
+    backLayer.classList.add("show");
+    frontLayer.classList.remove("show");
+    photoFront = !photoFront;
+
+    updateTintFromImage(src);
+  }
+
+  // ===== Background tint =====
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function rgbToHsl(r,g,b){
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h=0,s=0,l=(max+min)/2;
+    if(max!==min){
+      const d=max-min;
+      s=l>0.5 ? d/(2-max-min) : d/(max+min);
+      switch(max){
+        case r: h=(g-b)/d+(g<b?6:0); break;
+        case g: h=(b-r)/d+2; break;
+        case b: h=(r-g)/d+4; break;
+      }
+      h/=6;
+    }
+    return [h,s,l];
+  }
+  function hslToCss(h,s,l){
+    return `hsl(${Math.round(h*360)} ${Math.round(s*100)}% ${Math.round(l*100)}%)`;
+  }
+  function updateTint(bgCss){
+    const front = tintFront ? tintA : tintB;
+    const back  = tintFront ? tintB : tintA;
+
+    back.style.background = bgCss;
+    back.classList.add("show");
+    front.classList.remove("show");
+    tintFront = !tintFront;
+  }
+  function updateTintFromImage(src){
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const w = 48, h = 48;
+      canvas.width = w; canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+      const data = ctx.getImageData(0,0,w,h).data;
+
+      let r=0,g=0,b=0,c=0;
+      for(let i=0;i<data.length;i+=4){
+        const a = data[i+3];
+        if (a < 32) continue;
+        r += data[i];
+        g += data[i+1];
+        b += data[i+2];
+        c++;
+      }
+      if (!c) return;
+
+      r = Math.round(r/c);
+      g = Math.round(g/c);
+      b = Math.round(b/c);
+
+      let [hh,ss,ll] = rgbToHsl(r,g,b);
+      ss = clamp(ss * 0.65 + 0.18, 0.20, 0.55);
+      ll = clamp(ll * 0.85 + 0.22, 0.72, 0.92);
+
+      const c1 = hslToCss(hh, ss, ll);
+      const c2 = hslToCss((hh + 0.06) % 1, clamp(ss*0.9,0.20,0.55), clamp(ll*0.92,0.74,0.94));
+
+      const bgCss = `
+        radial-gradient(900px 520px at 20% 10%, ${c1}, transparent 60%),
+        radial-gradient(900px 520px at 85% 20%, ${c2}, transparent 62%),
+        linear-gradient(180deg, ${c1}, ${c2})
+      `;
+      updateTint(bgCss);
+    };
+    img.src = src;
+  }
+
+  // ===== Music =====
+  async function ensureMusicOn(){
+    if (musicOn) return;
+    try{
+      bgm.volume = 0.75;
+      await bgm.play();
+      musicOn = true;
+      musicBtn.textContent = "Music ⏸";
+    }catch(_){}
+  }
+  async function toggleMusic(){
+    try{
+      if (!musicOn){
+        bgm.volume = 0.75;
+        await bgm.play();
+        musicOn = true;
+        musicBtn.textContent = "Music ⏸";
+      } else {
+        bgm.pause();
+        musicOn = false;
+        musicBtn.textContent = "Music ♫";
+      }
+    } catch (e){
+      alert("Nhấn Music thêm lần nữa để bật nhạc nha 💗");
+    }
+  }
+
+  // ===== Finale cinematic =====
+  function rand(min, max){ return Math.random() * (max - min) + min; }
+  function pick(arr, idx){ return arr[idx % arr.length]; }
+
+  function finaleSizeBounds(W){
+    const isPhone = W <= 520;
+    const min = isPhone ? 82 : 120;
+    const max = isPhone ? 150 : 230;
+    return [min, max];
+  }
+
+  function buildFinale(){
+    floatField.innerHTML = "";
+
+    const imgs = sequence.filter(x => x.type === "image").map(x => x.src);
+    if (!imgs.length) return;
+
+    updateTintFromImage(imgs[imgs.length - 1]);
+
+    const rect = floatField.getBoundingClientRect();
+    const W = rect.width;
+    const H = rect.height;
+    if (W < 50 || H < 50) return;
+
+    const [SIZE_MIN, SIZE_MAX] = finaleSizeBounds(W);
+
+    const centerX = W / 2;
+    const centerY = H / 2;
+
+    const count = Math.min(FINALE_COUNT, Math.max(14, imgs.length));
+    const placed = [];
+
+    function fits(x,y,s){
+      for (const p of placed){
+        const dx = (x + s/2) - (p.x + p.s/2);
+        const dy = (y + s/2) - (p.y + p.s/2);
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < (s + p.s) * 0.44) return false;
+      }
+      return true;
+    }
+
+    const topSafe = FINALE_SAFE + 56;
+    const bottomSafe = FINALE_SAFE + 78;
+
+    for (let k=0; k<count; k++){
+      const src = pick(imgs, k);
+
+      let s = rand(SIZE_MIN, SIZE_MAX);
+      if (Math.random() < 0.35) s *= rand(0.78, 0.92);
+
+      let x=0,y=0, tries=0;
+      const maxX = Math.max(FINALE_SAFE, W - s - FINALE_SAFE);
+      const maxY = Math.max(topSafe, H - s - bottomSafe);
+
+      do{
+        x = rand(FINALE_SAFE, maxX);
+        y = rand(topSafe, maxY);
+        tries++;
+      } while(tries < 28 && !fits(x,y,s));
+
+      placed.push({x,y,s});
+
+      const card = document.createElement("div");
+      card.className = "floatCard";
+
+      const z = Math.round(rand(1, 7));
+      const op = clamp(0.84 + z * 0.02, 0.88, 0.98);
+
+      const dx = rand(-16, 16);
+      const dy = rand(-18, 18);
+      const r0 = rand(-1.8, 1.2);
+      const r1 = rand(-1.2, 1.8);
+      const dur = rand(9.2, 14.2);
+      const delay = rand(0, 760);
+
+      card.style.left = x + "px";
+      card.style.top = y + "px";
+      card.style.width = s + "px";
+      card.style.height = s + "px";
+      card.style.zIndex = String(z);
+      card.style.setProperty("--dx", dx + "px");
+      card.style.setProperty("--dy", dy + "px");
+      card.style.setProperty("--r0", r0 + "deg");
+      card.style.setProperty("--r1", r1 + "deg");
+      card.style.setProperty("--dur", dur + "s");
+      card.style.setProperty("--delay", delay + "ms");
+
+      const img = new Image();
+      img.src = src;
+      img.alt = "";
+      img.loading = "lazy";
+      card.appendChild(img);
+
+      floatField.appendChild(card);
+
+      const finalCx = x + s/2;
+      const finalCy = y + s/2;
+      const startDx = (centerX - finalCx);
+      const startDy = (centerY - finalCy);
+
+      const startRot = rand(-10, 10);
+      const endRot = rand(-2.2, 2.2);
+
+      card.animate(
+        [
+          { transform: `translate3d(${startDx}px, ${startDy}px, 0) scale(.70) rotate(${startRot}deg)`, opacity: 0, filter: "blur(10px) saturate(1.0)" },
+          { offset: 0.55, transform: `translate3d(${startDx*0.14}px, ${startDy*0.14}px, 0) scale(.97) rotate(${endRot}deg)`, opacity: op, filter: "blur(1px) saturate(1.03)" },
+          { transform: `translate3d(0px, 0px, 0) scale(1) rotate(0deg)`, opacity: op, filter: "blur(0px) saturate(1.03)" }
+        ],
+        { duration: 1220, delay, easing: "cubic-bezier(.18,.92,.18,1)", fill: "forwards" }
+      ).onfinish = () => {
+        card.style.opacity = String(op);
+        card.style.filter = "blur(0px) saturate(1.03)";
+        card.classList.add("drift");
+      };
+    }
+  }
+
+  function showFinale(){
+    clearTimer();
+    abortTyping();
+    playing = false;
+    playBtn.textContent = "Play ▶";
+
+    wrap.classList.add("hidden");
+    finale.classList.add("show");
+    finale.setAttribute("aria-hidden","false");
+
+    requestAnimationFrame(() => requestAnimationFrame(buildFinale));
+  }
+
+  function hideFinale(){
+    finale.classList.remove("show");
+    finale.setAttribute("aria-hidden","true");
+    floatField.innerHTML = "";
+    wrap.classList.remove("hidden");
+  }
+
+  // ===== Engine loop =====
+  function runOne(){
+    clearTimer();
+    if (i >= sequence.length){
+      showFinale();
+      return;
+    }
+    const item = sequence[i];
+    setStat();
+
+    if (item.type === "text"){
+      setText(item.title, item.text);
+      timer = setTimeout(() => {
+        i++;
+        setStat();
+        if (playing) timer = setTimeout(runOne, GAP);
+      }, HOLD_TEXT);
+      return;
+    }
+
+    if (item.type === "image"){
+      setPhoto(item.src);
+      timer = setTimeout(() => {
+        i++;
+        setStat();
+        if (playing) timer = setTimeout(runOne, GAP);
+      }, HOLD_IMAGE);
+      return;
+    }
+
+    i++;
+    if (playing) runOne();
+  }
+
+  function play(){
+    if (finale.classList.contains("show")) restart();
+    if (playing) return;
+    playing = true;
+    playBtn.textContent = "Pause ⏸";
+    ensureMusicOn();
+    runOne();
+  }
+  function pause(){
+    playing = false;
+    playBtn.textContent = "Play ▶";
+    clearTimer();
+    abortTyping();
+  }
+  function togglePlay(){ playing ? pause() : play(); }
+
+  function next(){
+    if (skipTypingToEnd()) return;
+    if (finale.classList.contains("show")) return;
+
+    clearTimer();
+    abortTyping();
+    i = Math.min(i + 1, sequence.length);
+    setStat();
+
+    if (i < sequence.length){
+      const wasPlaying = playing;
+      playing = false;
+      playBtn.textContent = "Play ▶";
+      runOne();
+      playing = wasPlaying;
+      if (playing) playBtn.textContent = "Pause ⏸";
+    } else {
+      pause();
+    }
+  }
+
+  function restart(){
+    clearTimer();
+    abortTyping();
+    hideFinale();
+
+    i = 0;
+    setStat();
+
+    msgTitle.innerHTML = `<span class="tagSticker" aria-hidden="true">🧸</span><span>Gợi ý</span>`;
+    lineA.innerHTML = 'Nhấn <b>Play</b> để bắt đầu 💗';
+    lineB.innerHTML = "";
+    lineA.classList.add("show");
+    lineB.classList.remove("show");
+    lineA.classList.remove("typing");
+    lineB.classList.remove("typing");
+    textFront = true;
+    msgSub.textContent = "";
+
+    const firstImg = sequence.find(x => x.type === "image") || {src:"photos/01.jpg"};
+    blurA.src = firstImg.src; mainA.src = firstImg.src;
+    blurB.src = firstImg.src; mainB.src = firstImg.src;
+    layerA.classList.add("show");
+    layerB.classList.remove("show");
+    photoFront = true;
+
+    glowText();
+    popPhoto();
+    updateTintFromImage(firstImg.src);
+
+    pause();
+  }
+
+  playBtn.addEventListener("click", togglePlay);
+  nextBtn.addEventListener("click", next);
+  restartBtn.addEventListener("click", restart);
+  musicBtn.addEventListener("click", toggleMusic);
+
+  // Preload images
+  (function preload(){
+    sequence.filter(x => x.type === "image").forEach(x => {
+      const im = new Image();
+      im.src = x.src;
+    });
+  })();
+
+  // Init first photo + tint
+  const firstImg = sequence.find(x => x.type === "image") || {src:"photos/01.jpg"};
+  blurA.src = firstImg.src; mainA.src = firstImg.src;
+  blurB.src = firstImg.src; mainB.src = firstImg.src;
+  updateTintFromImage(firstImg.src);
+  setStat();
+
+  // Rebuild finale on resize (if showing)
+  window.addEventListener("resize", () => {
+    if (finale.classList.contains("show")){
+      requestAnimationFrame(() => requestAnimationFrame(buildFinale));
+    }
+  });
+</script>
+</body>
+</html>
